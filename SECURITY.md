@@ -31,7 +31,11 @@ protected, and the last security review (2026-10-15).
 
 ## Dependencies
 
-`pip-audit` on all requirement files: no known vulnerabilities except one accepted item.
+CI runs `pip-audit` on every push (`make audit` locally): the installed environment, which covers
+transitive dependencies that Dependabot cannot see without a lock file, plus the Airflow pipeline
+and Streamlit requirement files. Any new advisory fails the build; the single ignored ID is the
+accepted item below. GitHub CodeQL (default setup), Dependabot alerts and security updates, secret
+scanning and push protection are enabled on the repository.
 
 | Package | Advisory | Status |
 |---|---|---|
@@ -41,5 +45,6 @@ protected, and the last security review (2026-10-15).
 
 - Rotate the Databricks token before it expires (2027-01-12) or if it is ever exposed; revoke it
   when the cloud deployment is no longer needed.
-- Keep the GitHub repo free of `.env` files; GitHub secret scanning and Dependabot alerts can be
-  enabled in the repo settings at no cost.
+- Keep the GitHub repo free of `.env` files (push protection blocks known token formats).
+- When databricks-sql-connector allows `oauthlib>=4`, upgrade it and remove `PYSEC-2026-4114` from the
+  ignore list in `.github/workflows/ci.yml` and the `Makefile`.

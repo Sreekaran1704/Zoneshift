@@ -5,7 +5,7 @@ START ?= 2024-01
 END ?= 2025-12
 TYPES ?= yellow,green
 
-.PHONY: setup ingest dbt dq analysis dashboard app test warehouse-files databricks ask agent-eval airflow-env airflow-build airflow-up airflow-down all
+.PHONY: setup ingest dbt dq analysis dashboard app test warehouse-files databricks ask agent-eval audit airflow-env airflow-build airflow-up airflow-down all
 
 # Python 3.12 venv (uv if installed, else python3.12) + pinned deps
 setup:
@@ -43,6 +43,13 @@ app:
 # Snowflake-dialect tests on the fakesnow emulator (no account needed)
 test:
 	$(PY) -m pytest -q
+
+# Dependency vulnerability audit, same as CI (installed env incl. transitive deps + other requirement files)
+AUDIT_IGNORE := --ignore-vuln PYSEC-2026-4114
+audit:
+	.venv/bin/pip-audit $(AUDIT_IGNORE) --progress-spinner off
+	.venv/bin/pip-audit -r orchestration/airflow/requirements-pipeline.txt $(AUDIT_IGNORE) --progress-spinner off
+	.venv/bin/pip-audit -r dashboard/requirements.txt --progress-spinner off
 
 # Warehouse-neutral load files for Snowflake / Databricks (data/warehouse_stage/)
 warehouse-files:
