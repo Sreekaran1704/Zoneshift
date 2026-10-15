@@ -1,0 +1,42 @@
+version: 2
+
+models:
+  - name: stg_yellow_trips
+    description: Yellow trips with lowercase snake_case names, explicit casts, and a deterministic trip_id.
+    columns:
+      - name: trip_id
+        description: "Deterministic key: service code (1=yellow) * 1e14 + file yyyymm * 1e8 + row number in file."
+      - name: source_month
+        description: YYYY-MM of the monthly file the row came from (not necessarily the pickup month).
+
+  - name: stg_green_trips
+    description: Green trips renamed/cast to the same columns as stg_yellow_trips (service code 2).
+
+  - name: stg_taxi_zones
+    description: TLC taxi zone lookup.
+    columns:
+      - name: location_id
+        data_tests: [unique, not_null]
+      - name: borough
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'EWR', 'Unknown', 'N/A']
+
+  - name: stg_cbd_zones
+    description: Taxi zones inside the MTA Congestion Relief Zone (the treatment group).
+    columns:
+      - name: location_id
+        data_tests:
+          - unique
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_taxi_zones')
+                field: location_id
+
+  - name: stg_taxi_zone_shapes
+    description: Taxi zone polygons in NY State Plane feet.
+    columns:
+      - name: location_id
+        data_tests: [unique, not_null]

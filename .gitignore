@@ -1,0 +1,25 @@
+# Secrets
+.env
+dbt/zoneshift/profiles.yml
+
+# Data (raw Parquet, DuckDB files)
+data/
+*.duckdb
+*.duckdb.wal
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# dbt
+dbt/zoneshift/target/
+dbt/zoneshift/dbt_packages/
+dbt/zoneshift/logs/
+logs/
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/

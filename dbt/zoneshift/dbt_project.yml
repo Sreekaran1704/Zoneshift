@@ -1,0 +1,33 @@
+name: zoneshift
+version: "1.0.0"
+profile: zoneshift
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+test-paths: ["tests"]
+macro-paths: ["macros"]
+clean-targets: ["target", "dbt_packages"]
+
+vars:
+  analysis_start: "2024-01-01"   # inclusive
+  analysis_end: "2026-01-01"     # exclusive
+  policy_date: "2025-01-05"      # congestion pricing start
+  # Non-CBD Manhattan zones within this distance (feet, NY State Plane) of a CBD zone are border zones.
+  # Small tolerance absorbs slivers in the TLC shapefile; river gaps (Roosevelt Island) are much wider.
+  border_tolerance_ft: 100
+
+models:
+  zoneshift:
+    staging:
+      +schema: staging
+      +materialized: view
+    intermediate:
+      +schema: intermediate
+      +materialized: view
+    marts:
+      +schema: marts
+      +materialized: table
+
+seeds:
+  zoneshift:
+    +schema: seeds

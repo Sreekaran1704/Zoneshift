@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: int_trips_unioned
+    description: Yellow and green staged trips stacked into one relation (columns aligned by name).
+
+  - name: int_trips_cleaned
+    description: >
+      All unioned trips plus derived measures (trip_minutes, avg_mph, tip_pct), CBD treatment flags
+      joined from the MTA zone list, and one boolean per exclusion rule. Null inputs to a rule are
+      treated as failing it (e.g. a null distance counts as non-positive). is_excluded = any flag.
+    columns:
+      - name: trip_minutes
+        description: Minutes between pickup and dropoff.
+      - name: avg_mph
+        description: trip_distance_mi / hours; null when trip_minutes <= 0.
+      - name: tip_pct
+        description: 100 * tip_amount / fare_amount for card payments (payment_type = 1) with fare > 0; else null.
+      - name: pickup_in_cbd
+        description: Pickup zone is in the MTA Congestion Relief Zone list.
+      - name: dropoff_in_cbd
+        description: Dropoff zone is in the MTA Congestion Relief Zone list.
+      - name: flag_nonpositive_distance
+        description: trip_distance_mi <= 0 or null.
+      - name: flag_negative_fare
+        description: fare_amount < 0 (refunds/voids).
+      - name: flag_dropoff_before_pickup
+        description: dropoff_at earlier than pickup_at (or either is null).
+      - name: flag_over_3_hours
+        description: trip_minutes > 180.
+      - name: flag_over_80_mph
+        description: Implied speed above 80 mph, including positive distance with zero duration.
+      - name: flag_outside_window
+        description: Pickup outside [analysis_start, analysis_end).
+      - name: flag_unknown_zone
+        description: Pickup or dropoff zone is 264 (Unknown) or 265 (Outside of NYC), or null.
+      - name: is_excluded
+        description: True if any exclusion flag is set.

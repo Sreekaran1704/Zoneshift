@@ -1,0 +1,203 @@
+version: 2
+
+models:
+  - name: dim_zone
+    description: One row per TLC taxi zone with treatment (CBD), border, and map centroid attributes.
+    columns:
+      - name: location_id
+        description: TLC taxi zone ID (1-265).
+        data_tests: [unique, not_null]
+      - name: borough
+        description: NYC borough (EWR = Newark Airport; Unknown/N/A for 264/265).
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['Manhattan', 'Brooklyn', 'Queens', 'Bronx', 'Staten Island', 'EWR', 'Unknown', 'N/A']
+      - name: zone
+        description: Zone name.
+      - name: service_zone
+        description: TLC service zone (Yellow Zone, Boro Zone, Airports, EWR).
+      - name: is_cbd
+        description: Zone is inside the MTA Congestion Relief Zone (treated group).
+        data_tests: [not_null]
+      - name: is_border_zone
+        description: Non-CBD Manhattan zone adjacent to a CBD zone (spillover risk; excluded from the main control group).
+        data_tests: [not_null]
+      - name: is_unknown_zone
+        description: Zone 264 (Unknown) or 265 (Outside of NYC).
+      - name: centroid_lon
+        description: Polygon centroid longitude (WGS84); null for zones without a shape.
+      - name: centroid_lat
+        description: Polygon centroid latitude (WGS84).
+
+  - name: dim_date
+    description: One row per calendar day in the analysis window.
+    columns:
+      - name: date_day
+        description: Calendar date.
+        data_tests: [unique, not_null]
+      - name: month_start
+        description: First day of the month.
+      - name: iso_day_of_week
+        description: 1 = Monday ... 7 = Sunday.
+      - name: is_weekend
+        description: Saturday or Sunday.
+      - name: is_holiday
+        description: US federal holiday (observed).
+      - name: holiday_name
+        description: Holiday name, null on other days.
+      - name: post_policy
+        description: date_day >= 2025-01-05 (congestion pricing start).
+        data_tests: [not_null]
+      - name: weeks_from_policy
+        description: Weeks relative to 2025-01-05 (0 = 2025-01-05..2025-01-11; negative = before).
+      - name: is_holiday_week
+        description: The event-study week (weeks_from_policy) contains a federal holiday.
+
+  - name: fct_trips
+    description: >
+      Clean trips (is_excluded = false in int_trips_cleaned), one row per trip, yellow + green.
+      Incremental by source file.
+    columns:
+      - name: trip_id
+        description: "Deterministic key: service code * 1e14 + file yyyymm * 1e8 + row in file."
+        data_tests: [unique, not_null]
+      - name: service_type
+        description: yellow or green.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['yellow', 'green']
+      - name: pickup_at
+        description: Pickup timestamp (local time).
+        data_tests: [not_null]
+      - name: pickup_date
+        description: Pickup date.
+        data_tests:
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_day
+      - name: pickup_hour
+        description: Pickup hour of day (0-23).
+      - name: pu_location_id
+        description: Pickup taxi zone.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_zone')
+                field: location_id
+      - name: do_location_id
+        description: Dropoff taxi zone.
+        data_tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_zone')
+                field: location_id
+      - name: pickup_in_cbd
+        description: Pickup zone is in the CBD.
+      - name: dropoff_in_cbd
+        description: Dropoff zone is in the CBD.
+      - name: trip_distance_mi
+        description: Trip distance in miles (taximeter).
+        data_tests:
+          - value_between:
+              arguments:
+                min_value: 0
+                max_value: 240   # 80 mph * 3 h
+      - name: trip_minutes
+        description: Trip duration in minutes.
+        data_tests:
+          - value_between:
+              arguments:
+                min_value: 0
+                max_value: 180
+      - name: avg_mph
+        description: Trip average speed (mph); null for zero-duration trips.
+        data_tests:
+          - value_between:
+              arguments:
+                min_value: 0
+                max_value: 80
+      - name: payment_type
+        description: 0=flex fare/unknown, 1=credit card, 2=cash, 3=no charge, 4=dispute, 5=unknown, 6=voided.
+      - name: fare_amount
+        description: Metered time-and-distance fare in USD (excludes surcharges, tolls, tips, and the CBD fee).
+      - name: tip_amount
+        description: Tip in USD (card payments only are reliable).
+      - name: tip_pct
+        description: 100 * tip / fare for card trips with fare > 0; else null.
+      - name: cbd_congestion_fee
+        description: MTA Congestion Relief Zone fee charged on the trip (null before the 2025-01 files).
+      - name: congestion_surcharge
+        description: New York State congestion surcharge (pre-existing since 2019; distinct from the CBD fee).
+      - name: total_amount
+        description: Total charged to the passenger, excluding cash tips.
+      - name: source_file
+        description: Monthly Parquet file the trip came from.
+
+  - name: agg_zone_day
+    description: >
+      Daily metrics per pickup zone and service_type ('yellow', 'green', or 'all' = combined).
+      Grain for the difference-in-differences analysis. Sparse (no rows for zero-trip zone-days).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ['location_id', 'date_day', 'service_type']
+    columns:
+      - name: location_id
+        description: Pickup taxi zone.
+        data_tests: [not_null]
+      - name: date_day
+        description: Pickup date.
+        data_tests: [not_null]
+      - name: service_type
+        description: yellow, green, or all.
+        data_tests:
+          - accepted_values:
+              arguments:
+                values: ['yellow', 'green', 'all']
+      - name: trip_count
+        description: Number of clean trips picked up.
+      - name: median_fare
+        description: Median metered fare (USD), excluding the CBD fee and other surcharges.
+      - name: avg_fare
+        description: Mean metered fare (USD).
+      - name: avg_speed_mph
+        description: Total distance / total hours across trips (distance-weighted speed).
+      - name: card_tip_pct
+        description: Mean tip % of fare across card trips.
+      - name: card_trip_count
+        description: Number of card trips contributing to card_tip_pct.
+      - name: avg_distance_mi
+        description: Mean trip distance (miles).
+      - name: avg_trip_minutes
+        description: Mean trip duration (minutes).
+      - name: dropoff_cbd_share
+        description: Share of trips ending in a CBD zone.
+      - name: total_cbd_fee
+        description: Sum of CBD congestion fees charged (USD).
+      - name: total_amount
+        description: Sum of total_amount (USD).
+
+  - name: agg_zone_hour
+    description: Pickup zone x month x hour of day x weekend flag x service_type ('all' = combined).
+    data_tests:
+      - unique_combination:
+          arguments:
+            columns: ['location_id', 'month_start', 'hour_of_day', 'is_weekend', 'service_type']
+    columns:
+      - name: hour_of_day
+        description: Pickup hour (0-23).
+      - name: trip_count
+        description: Clean trips in the cell.
+      - name: active_days
+        description: Days in the cell with at least one trip (divide trip_count by this for a daily average).
+      - name: median_fare
+        description: Median metered fare (USD).
+      - name: avg_speed_mph
+        description: Total distance / total hours.
+      - name: card_tip_pct
+        description: Mean card tip % of fare.

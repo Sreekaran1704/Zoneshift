@@ -1,0 +1,27 @@
+# Copy to profiles.yml (gitignored); `make dbt` does this automatically if it is missing.
+# Credentials come from environment variables (see .env.example), never from this file.
+zoneshift:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      # Relative to dbt/zoneshift (where dbt runs)
+      path: "{{ env_var('ZONESHIFT_DUCKDB_PATH', '../../data/zoneshift.duckdb') }}"
+      schema: main
+      threads: 4
+      extensions:
+        - spatial
+      settings:
+        memory_limit: "8GB"
+        preserve_insertion_order: false
+
+    prod:  # Snowflake (Phase 6)
+      type: snowflake
+      account: "{{ env_var('SNOWFLAKE_ACCOUNT', '') }}"
+      user: "{{ env_var('SNOWFLAKE_USER', '') }}"
+      password: "{{ env_var('SNOWFLAKE_PASSWORD', '') }}"
+      role: "{{ env_var('SNOWFLAKE_ROLE', '') }}"
+      warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', '') }}"
+      database: "{{ env_var('SNOWFLAKE_DATABASE', '') }}"
+      schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'ZONESHIFT') }}"
+      threads: 4

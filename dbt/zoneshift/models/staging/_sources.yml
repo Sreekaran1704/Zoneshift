@@ -1,0 +1,67 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Raw files registered by ingestion/load_duckdb.py. Trip tables are views over the monthly
+      NYC TLC Parquet files (read with union_by_name, so column case and type drift across months
+      are tolerated here and fixed in staging). Trip records are submitted by technology vendors
+      and are not verified by TLC.
+    tables:
+      - name: yellow_tripdata
+        description: Yellow taxi trip records, one row per trip, 2024-01 to 2025-12 monthly files.
+        config:
+          loaded_at_field: tpep_pickup_datetime
+          # TLC publishes with roughly a two-month lag; the analysis window is fixed, so this warns
+          # once newer months exist upstream. It never errors.
+          freshness:
+            warn_after: {count: 75, period: day}
+        columns:
+          - name: tpep_pickup_datetime
+            description: Meter engaged (local NYC time, no timezone).
+            data_tests: [not_null]
+          - name: tpep_dropoff_datetime
+            description: Meter disengaged.
+          - name: PULocationID
+            description: TLC taxi zone where the meter was engaged.
+          - name: DOLocationID
+            description: TLC taxi zone where the meter was disengaged.
+          - name: fare_amount
+            description: Time-and-distance fare from the meter (excludes surcharges, tolls, tips, CBD fee).
+          - name: tip_amount
+            description: Tip; populated for card payments only (cash tips are not recorded).
+          - name: payment_type
+            description: 0=flex fare/unknown, 1=credit card, 2=cash, 3=no charge, 4=dispute, 5=unknown, 6=voided.
+          - name: cbd_congestion_fee
+            description: Per-trip MTA Congestion Relief Zone fee; column exists from the 2025-01 file onward.
+          - name: Airport_fee
+            description: Airport pickup fee (column spelled Airport_fee or airport_fee depending on month).
+          - name: filename
+            description: Source Parquet file path (added by read_parquet).
+          - name: file_row_number
+            description: Row position within the source Parquet file (added by read_parquet).
+
+      - name: green_tripdata
+        description: Green (boro) taxi trip records, one row per trip, 2024-01 to 2025-12 monthly files.
+        config:
+          loaded_at_field: lpep_pickup_datetime
+          freshness:
+            warn_after: {count: 75, period: day}
+        columns:
+          - name: lpep_pickup_datetime
+            description: Meter engaged (local NYC time).
+            data_tests: [not_null]
+          - name: trip_type
+            description: 1=street hail, 2=dispatch.
+          - name: ehail_fee
+            description: E-hail fee (green only).
+
+      - name: taxi_zone_lookup
+        description: TLC taxi zone lookup (265 rows; 264 = Unknown, 265 = Outside of NYC).
+      - name: cbd_taxi_zones
+        description: >
+          MTA list of TLC taxi zones inside the Congestion Relief Zone (data.ny.gov yfdc-w5jh).
+          Defines treatment; zone IDs are never hand-coded.
+      - name: taxi_zone_shapes
+        description: TLC taxi zone polygons (shapefile, NY State Plane EPSG:2263, US feet).
