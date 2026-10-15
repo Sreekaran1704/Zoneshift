@@ -57,7 +57,7 @@ models:
   - name: fct_trips
     description: >
       Clean trips (is_excluded = false in int_trips_cleaned), one row per trip, yellow + green.
-      Incremental by source file.
+      Incremental by trip_id.
     columns:
       - name: trip_id
         description: "Deterministic key: service code * 1e14 + file yyyymm * 1e8 + row in file."

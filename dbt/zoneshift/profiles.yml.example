@@ -8,11 +8,12 @@ zoneshift:
       # Relative to dbt/zoneshift (where dbt runs)
       path: "{{ env_var('ZONESHIFT_DUCKDB_PATH', '../../data/zoneshift.duckdb') }}"
       schema: main
-      threads: 4
+      threads: "{{ env_var('ZONESHIFT_DBT_THREADS', '4') | as_number }}"
       extensions:
         - spatial
       settings:
-        memory_limit: "8GB"
+        memory_limit: "{{ env_var('ZONESHIFT_DUCKDB_MEMORY', '8GB') }}"
+        threads: "{{ env_var('ZONESHIFT_DUCKDB_THREADS', '8') }}"
         preserve_insertion_order: false
 
     prod:  # Snowflake (Phase 6)
@@ -24,4 +25,26 @@ zoneshift:
       warehouse: "{{ env_var('SNOWFLAKE_WAREHOUSE', '') }}"
       database: "{{ env_var('SNOWFLAKE_DATABASE', '') }}"
       schema: "{{ env_var('SNOWFLAKE_SCHEMA', 'ZONESHIFT') }}"
+      threads: 4
+
+    fakesnow:  # Snowflake emulator (tests/CI): `python -m fakesnow -s -p $FAKESNOW_PORT`, or see tests/snowflake/
+      type: snowflake
+      account: fakesnow
+      user: fake
+      password: snow
+      host: "{{ env_var('FAKESNOW_HOST', 'localhost') }}"
+      port: "{{ env_var('FAKESNOW_PORT', '64616') | as_number }}"
+      protocol: http
+      database: ZONESHIFT
+      schema: MAIN
+      warehouse: FAKESNOW
+      threads: 1
+
+    databricks:  # Databricks Free Edition (serverless SQL warehouse); run via warehouse/databricks/run_dbt.py
+      type: databricks
+      host: "{{ env_var('DATABRICKS_HOST', '') }}"
+      http_path: "{{ env_var('DATABRICKS_HTTP_PATH', '') }}"
+      token: "{{ env_var('DATABRICKS_TOKEN', '') }}"
+      catalog: workspace
+      schema: main
       threads: 4

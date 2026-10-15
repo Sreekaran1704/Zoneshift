@@ -3,8 +3,8 @@
 with post as (
     select
         count(*) as n_trips,
-        count(*) filter (where cbd_congestion_fee is not null
-                           and cbd_congestion_fee not in (0, 0.75)) as n_anomalies
+        sum(case when cbd_congestion_fee is not null
+                  and cbd_congestion_fee not in (0, 0.75) then 1 else 0 end) as n_anomalies
     from {{ ref('fct_trips') }}
     where pickup_at >= timestamp '{{ var("policy_date") }}'
 )

@@ -1,0 +1,17 @@
+{
+  "sample_mod": 100,
+  "tables": {
+    "raw.yellow_tripdata": 1195973,
+    "raw.green_tripdata": 15904,
+    "raw.taxi_zone_lookup": 265,
+    "raw.cbd_taxi_zones": 38,
+    "raw.taxi_zone_shapes": 263,
+    "raw.load_metadata": 1,
+    "zoneshift_full.agg_zone_day": 550022,
+    "zoneshift_full.agg_zone_hour": 776203,
+    "zoneshift_full.dim_zone": 265,
+    "zoneshift_full.dim_date": 974,
+    "zoneshift_full.did_results": 24,
+    "zoneshift_full.event_study": 420
+  }
+}

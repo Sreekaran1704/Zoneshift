@@ -57,6 +57,10 @@ sources:
           - name: ehail_fee
             description: E-hail fee (green only).
 
+      - name: load_metadata
+        description: >
+          One row written by load_duckdb.py: window_start / window_end (exclusive) derived from the
+          monthly files loaded. Defines the warehouse date window (pickups outside it are flagged).
       - name: taxi_zone_lookup
         description: TLC taxi zone lookup (265 rows; 264 = Unknown, 265 = Outside of NYC).
       - name: cbd_taxi_zones
@@ -65,3 +69,8 @@ sources:
           Defines treatment; zone IDs are never hand-coded.
       - name: taxi_zone_shapes
         description: TLC taxi zone polygons (shapefile, NY State Plane EPSG:2263, US feet).
+      - name: zone_spatial_fallback
+        description: >
+          Test-only (fakesnow target): border flag and centroid per zone exported from the DuckDB
+          build, because the Snowflake emulator has no GEOMETRY functions. Not used on DuckDB or
+          real Snowflake.

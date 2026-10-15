@@ -23,6 +23,14 @@ green,2025-09,data/raw/green/green_tripdata_2025-09.parquet,1209831,48893,downlo
 green,2025-10,data/raw/green/green_tripdata_2025-10.parquet,1205685,49416,downloaded,2026-10-15T00:05:55+00:00
 green,2025-11,data/raw/green/green_tripdata_2025-11.parquet,1164775,46912,downloaded,2026-10-15T00:05:55+00:00
 green,2025-12,data/raw/green/green_tripdata_2025-12.parquet,1171145,48236,downloaded,2026-10-15T00:05:55+00:00
+green,2026-01,data/raw/green/green_tripdata_2026-01.parquet,991656,40272,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-02,data/raw/green/green_tripdata_2026-02.parquet,920753,37373,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-03,data/raw/green/green_tripdata_2026-03.parquet,1082530,44208,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-04,data/raw/green/green_tripdata_2026-04.parquet,1075896,44238,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-05,data/raw/green/green_tripdata_2026-05.parquet,1102947,44921,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-06,data/raw/green/green_tripdata_2026-06.parquet,1075836,44163,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-07,data/raw/green/green_tripdata_2026-07.parquet,1018250,41252,skipped_existing,2026-10-15T03:13:24+00:00
+green,2026-08,data/raw/green/green_tripdata_2026-08.parquet,1007530,40687,skipped_existing,2026-10-15T03:13:24+00:00
 yellow,2024-01,data/raw/yellow/yellow_tripdata_2024-01.parquet,49961641,2964624,downloaded,2026-10-15T00:05:55+00:00
 yellow,2024-02,data/raw/yellow/yellow_tripdata_2024-02.parquet,50349284,3007526,downloaded,2026-10-15T00:05:55+00:00
 yellow,2024-03,data/raw/yellow/yellow_tripdata_2024-03.parquet,60078280,3582628,downloaded,2026-10-15T00:05:55+00:00
@@ -47,3 +55,11 @@ yellow,2025-09,data/raw/yellow/yellow_tripdata_2025-09.parquet,72432945,4251015,
 yellow,2025-10,data/raw/yellow/yellow_tripdata_2025-10.parquet,75267589,4428699,downloaded,2026-10-15T00:05:55+00:00
 yellow,2025-11,data/raw/yellow/yellow_tripdata_2025-11.parquet,71134255,4181444,downloaded,2026-10-15T00:05:55+00:00
 yellow,2025-12,data/raw/yellow/yellow_tripdata_2025-12.parquet,73701327,4305006,downloaded,2026-10-15T00:05:55+00:00
+yellow,2026-01,data/raw/yellow/yellow_tripdata_2026-01.parquet,64165080,3724889,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-02,data/raw/yellow/yellow_tripdata_2026-02.parquet,58683353,3399866,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-03,data/raw/yellow/yellow_tripdata_2026-03.parquet,67891249,3952451,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-04,data/raw/yellow/yellow_tripdata_2026-04.parquet,64818115,3831240,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-05,data/raw/yellow/yellow_tripdata_2026-05.parquet,69699174,4090836,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-06,data/raw/yellow/yellow_tripdata_2026-06.parquet,65465637,3837248,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-07,data/raw/yellow/yellow_tripdata_2026-07.parquet,61685033,3530109,skipped_existing,2026-10-15T03:13:24+00:00
+yellow,2026-08,data/raw/yellow/yellow_tripdata_2026-08.parquet,59043961,3336716,skipped_existing,2026-10-15T03:13:24+00:00

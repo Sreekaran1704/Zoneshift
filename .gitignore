@@ -15,6 +15,7 @@ __pycache__/
 
 # dbt
 dbt/zoneshift/target/
+dbt/zoneshift/target-databricks/
 dbt/zoneshift/dbt_packages/
 dbt/zoneshift/logs/
 logs/

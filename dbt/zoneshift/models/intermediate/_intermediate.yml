@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: int_trips_unioned
-    description: Yellow and green staged trips stacked into one relation (columns aligned by name).
+    description: Yellow and green staged trips stacked into one relation (identical column lists).
 
   - name: int_trips_cleaned
     description: >
@@ -31,7 +31,7 @@ models:
       - name: flag_over_80_mph
         description: Implied speed above 80 mph, including positive distance with zero duration.
       - name: flag_outside_window
-        description: Pickup outside [analysis_start, analysis_end).
+        description: Pickup outside the data window in raw.load_metadata (derived from the loaded monthly files).
       - name: flag_unknown_zone
         description: Pickup or dropoff zone is 264 (Unknown) or 265 (Outside of NYC), or null.
       - name: is_excluded

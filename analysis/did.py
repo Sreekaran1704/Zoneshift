@@ -32,6 +32,10 @@ from utils import DB_PATH, RESULTS_DIR, update_metrics  # noqa: E402
 PREREG = ROOT / "analysis" / "PREREGISTRATION.md"
 FIG_DIR = ROOT / "analysis" / "figures"
 
+# Pre-registered analysis window. The warehouse window can grow as new months are loaded
+# (Airflow), but the analysis always uses exactly this window.
+ANALYSIS_START = pd.Timestamp("2024-01-01")
+ANALYSIS_END = pd.Timestamp("2026-01-01")  # exclusive
 POLICY = pd.Timestamp("2025-01-05")
 PLACEBO_CUTOFF = pd.Timestamp("2024-07-01")
 PLACEBO_END = pd.Timestamp("2025-01-01")  # exclusive: 2024 data only
@@ -57,13 +61,18 @@ def load_panel(con: duckdb.DuckDBPyConnection, service_type: str) -> tuple[pd.Da
     zones = con.sql("""
         select location_id, is_cbd, is_border_zone, is_unknown_zone from marts.dim_zone
     """).df()
-    dates = con.sql("""
-        select date_day, weeks_from_policy, is_holiday_week from marts.dim_date
-    """).df()
+    window = [ANALYSIS_START.date(), ANALYSIS_END.date()]
+    dates = con.execute("""
+        select date_day, weeks_from_policy, is_holiday from marts.dim_date
+        where date_day >= ? and date_day < ?
+    """, window).df()
+    # Holiday weeks from holidays inside the analysis window only, so a wider warehouse window
+    # (e.g. 2026-01-01 sharing an event week with 2025-12-28..31) cannot change the sample.
+    dates["is_holiday_week"] = dates.groupby("weeks_from_policy")["is_holiday"].transform("any")
     agg = con.execute("""
         select location_id, date_day, trip_count, median_fare, avg_speed_mph, card_tip_pct
-        from marts.agg_zone_day where service_type = ?
-    """, [service_type]).df()
+        from marts.agg_zone_day where service_type = ? and date_day >= ? and date_day < ?
+    """, [service_type, *window]).df()
     for df in (dates, agg):
         df["date_day"] = pd.to_datetime(df["date_day"])
 
@@ -78,6 +87,9 @@ def load_panel(con: duckdb.DuckDBPyConnection, service_type: str) -> tuple[pd.Da
     for c in ["is_cbd", "is_border_zone", "is_unknown_zone", "is_holiday_week"]:
         panel[c] = panel[c].astype(bool)
     panel["post"] = panel["date_day"] >= POLICY
+    # Fixed row order: DuckDB returns unordered rows and the FE solver is iterative, so sorting
+    # makes reruns reproducible to the last digit.
+    panel = panel.sort_values(["location_id", "date_day"], ignore_index=True)
     return panel, regular
 
 
@@ -207,6 +219,37 @@ def plot_event_study(es: pd.DataFrame, tests: dict, path: Path) -> None:
     plt.close(fig)
 
 
+def descriptive_totals(con: duckdb.DuckDBPyConnection) -> dict:
+    """Not pre-registered: average daily clean trips and median fare by zone group, pre vs post.
+    Pooled over trips (volume-weighted), unlike the unweighted zone-level DiD."""
+    rows = con.execute(f"""
+        with t as (
+            select case when z.is_cbd then 'cbd' when z.is_border_zone then 'border'
+                        when z.is_unknown_zone then null else 'other' end as zone_group,
+                   f.pickup_date >= date '{POLICY.date()}' as post, f.fare_amount
+            from marts.fct_trips f join marts.dim_zone z on z.location_id = f.pu_location_id
+            where f.pickup_date >= date '{ANALYSIS_START.date()}' and f.pickup_date < date '{ANALYSIS_END.date()}'
+        ), days as (
+            select post_policy as post, count(*) as n_days from marts.dim_date
+            where date_day >= date '{ANALYSIS_START.date()}' and date_day < date '{ANALYSIS_END.date()}'
+            group by 1
+        )
+        select zone_group, t.post, count(*) / any_value(days.n_days) as trips_per_day,
+               median(fare_amount) as median_fare
+        from t join days using (post)
+        where zone_group is not null
+        group by all
+    """).fetchall()
+    out = {}
+    for group, post, per_day, fare in rows:
+        g = out.setdefault(group, {})
+        g["post" if post else "pre"] = {"trips_per_day": round(per_day, 1), "median_fare": round(fare, 2)}
+    for g in out.values():
+        g["trips_per_day_pct_change"] = round(
+            100 * (g["post"]["trips_per_day"] / g["pre"]["trips_per_day"] - 1), 2)
+    return out
+
+
 # ---------------------------------------------------------------- main
 
 def main() -> None:
@@ -282,6 +325,7 @@ def main() -> None:
     update_metrics({
         "analysis_prereg_sha256": prereg_sha,
         "analysis_sample": sample_info,
+        "descriptive_pre_post_by_zone_group": descriptive_totals(con),
         "did_main": main_metrics,
         "did_robustness": robustness,
     })

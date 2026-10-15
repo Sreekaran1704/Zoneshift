@@ -12,7 +12,7 @@ import csv
 
 import duckdb
 
-from utils import DB_PATH, RAW_DIR, REF_DIR, RESULTS_DIR, update_metrics
+from utils import DB_PATH, RAW_DIR, REF_DIR, RESULTS_DIR, ROOT, update_metrics
 
 TRIP_TYPES = ["yellow", "green", "fhvhv"]
 
@@ -23,10 +23,12 @@ def main() -> None:
     con.execute("create schema if not exists raw")
 
     metrics = {}
+    months = []
     for t in TRIP_TYPES:
         files = sorted((RAW_DIR / t).glob(f"{t}_tripdata_*.parquet"))
         if not files:
             continue
+        months += [f.stem.rsplit("_", 1)[1] for f in files]
         con.execute(f"""
             create or replace view raw.{t}_tripdata as
             select * from read_parquet('{RAW_DIR / t}/{t}_tripdata_*.parquet',
@@ -37,6 +39,18 @@ def main() -> None:
         metrics[f"raw_rows_{t}"] = rows
         metrics[f"raw_files_{t}"] = len(files)
         print(f"raw.{t}_tripdata: {len(files)} files, {rows:,} rows")
+
+    # Data window = first day of the earliest loaded month to first day after the latest one.
+    # dbt reads this (single source of truth), so loading a new month extends the warehouse window.
+    con.execute(f"""
+        create or replace table raw.load_metadata as
+        select date '{min(months)}-01'                           as window_start,
+               date '{max(months)}-01' + interval 1 month         as window_end,
+               current_timestamp                                  as loaded_at
+    """)
+    window = con.execute("select window_start, cast(window_end as date) from raw.load_metadata").fetchone()
+    metrics["data_window"] = {"start": str(window[0]), "end_exclusive": str(window[1])}
+    print(f"raw.load_metadata: window {window[0]} to {window[1]} (exclusive)")
 
     con.execute(f"""
         create or replace table raw.taxi_zone_lookup as
@@ -63,7 +77,8 @@ def main() -> None:
         with open(log_path) as f:
             logged = {}
             for r in csv.DictReader(f):
-                logged[r["service_type"]] = logged.get(r["service_type"], 0) + int(r["rows"])
+                if (ROOT / r["file"]).exists():  # the log may list months not present locally
+                    logged[r["service_type"]] = logged.get(r["service_type"], 0) + int(r["rows"])
         for t, n in logged.items():
             if metrics.get(f"raw_rows_{t}") != n:
                 raise SystemExit(f"Row count mismatch for {t}: view={metrics.get(f'raw_rows_{t}')} log={n}")

@@ -3,12 +3,12 @@ version: 2
 seeds:
   - name: us_federal_holidays
     description: >
-      US federal holidays (observed dates) for 2024-2025, generated with the Python
+      US federal holidays (observed dates) for 2024-2027, generated with the Python
       `holidays` package (holidays.US(observed=True)). Extend when the analysis window grows.
     config:
       column_types:
         holiday_date: date
-        holiday_name: varchar
+        holiday_name: string
     columns:
       - name: holiday_date
         description: Observed holiday date.

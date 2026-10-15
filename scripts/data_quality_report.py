@@ -25,7 +25,7 @@ FLAGS = {
     "flag_dropoff_before_pickup": "Dropoff before pickup",
     "flag_over_3_hours": "Trip longer than 3 hours",
     "flag_over_80_mph": "Implied speed over 80 mph (incl. zero duration with distance)",
-    "flag_outside_window": "Pickup outside 2024-01-01 to 2025-12-31",
+    "flag_outside_window": "Pickup outside the data window (loaded months)",
     "flag_unknown_zone": "Pickup or dropoff zone unknown (264/265)",
 }
 
@@ -77,7 +77,9 @@ def main() -> None:
     flag_only = dict(zip(FLAGS, total[3 + len(FLAGS):]))
 
     fct_rows = q("select count(*) from marts.fct_trips")[0][0]
-    raw_total = json.loads(METRICS_PATH.read_text()).get("raw_rows_trips_total")
+    m = json.loads(METRICS_PATH.read_text())
+    raw_total = m.get("raw_rows_trips_total")
+    window = m["data_window"]
 
     fee_pre, fee_pre_min, fee_pre_max, fee_pre_ends_after = q("""
         select count(*), min(pickup_at), max(pickup_at),
@@ -112,7 +114,8 @@ def main() -> None:
         f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} from `data/zoneshift.duckdb` "
         f"and dbt run results ({tests['generated_at'][:19]}Z). Do not edit by hand._",
         "",
-        "Source: NYC TLC yellow and green trip records, monthly files 2024-01 to 2025-12. "
+        f"Source: NYC TLC yellow and green trip records; data window {window['start']} to "
+        f"{window['end_exclusive']} (exclusive), from the monthly files loaded. "
         "Trip records are submitted by technology vendors and are not verified by TLC.",
         "",
         "## Rows in and retained",

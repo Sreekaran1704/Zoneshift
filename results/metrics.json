@@ -1,35 +1,249 @@
 {
-  "agg_zone_day_rows": 406418,
+  "agent_eval": {
+    "by_difficulty_n": {
+      "easy": 15,
+      "hard": 12,
+      "medium": 18
+    },
+    "by_difficulty_pct": {
+      "easy": 93.3,
+      "hard": 83.3,
+      "medium": 100.0
+    },
+    "evaluated_at": "2026-10-14T23:33:43",
+    "executed_without_error_pct": 97.8,
+    "execution_accuracy_pct": 93.3,
+    "model": "openai/gpt-oss-120b",
+    "n_questions": 45,
+    "needed_repair_pct": 4.4
+  },
+  "agg_zone_day_rows": 550022,
+  "analysis_prereg_sha256": "efd33b3998af0ec1a03d69e97f5b5300ca2c14ed8859503a9e72e66923c5521d",
+  "analysis_sample": {
+    "days": 731,
+    "zones_control": 165,
+    "zones_dropped_activity_rule_cbd": 0,
+    "zones_dropped_activity_rule_noncbd": 54,
+    "zones_treated": 38
+  },
   "border_zone_count": 6,
   "cbd_zone_count": 38,
+  "data_window": {
+    "end_exclusive": "2026-09-01",
+    "start": "2024-01-01"
+  },
+  "databricks": {
+    "dbt_error": 0,
+    "dbt_pass": 55,
+    "dbt_warn": 2,
+    "dim_zone_flags_match_duckdb": true,
+    "fct_trips_match_duckdb": true,
+    "fct_trips_rows": 1126617,
+    "max_centroid_diff_deg": 1.0000000116860974e-06,
+    "raw_trip_rows": 1211877,
+    "sample_mod": 100
+  },
   "dbt_tests_fail": 0,
   "dbt_tests_pass": 42,
   "dbt_tests_total": 44,
   "dbt_tests_warn": 2,
-  "dq_cbd_fee_anomalies_post_policy": 2517,
+  "descriptive_pre_post_by_zone_group": {
+    "border": {
+      "post": {
+        "median_fare": 12.05,
+        "trips_per_day": 16930.7
+      },
+      "pre": {
+        "median_fare": 11.4,
+        "trips_per_day": 16151.4
+      },
+      "trips_per_day_pct_change": 4.82
+    },
+    "cbd": {
+      "post": {
+        "median_fare": 13.5,
+        "trips_per_day": 69035.2
+      },
+      "pre": {
+        "median_fare": 13.5,
+        "trips_per_day": 63064.5
+      },
+      "trips_per_day_pct_change": 9.47
+    },
+    "other": {
+      "post": {
+        "median_fare": 19.8,
+        "trips_per_day": 36029.9
+      },
+      "pre": {
+        "median_fare": 18.4,
+        "trips_per_day": 29596.1
+      },
+      "trips_per_day_pct_change": 21.74
+    }
+  },
+  "did_main": {
+    "avg_speed_mph": {
+      "ci_high": -0.272125,
+      "ci_low": -0.511132,
+      "coef": -0.391629,
+      "n_obs": 147813,
+      "p_holm": 0.0,
+      "p_value": 0.0,
+      "pct_change": null,
+      "pretrend_wald_p": 0.0,
+      "treated_pre_mean": 10.708313
+    },
+    "card_tip_pct": {
+      "ci_high": 2.89157,
+      "ci_low": 0.831209,
+      "coef": 1.86139,
+      "n_obs": 144457,
+      "p_holm": 0.000398,
+      "p_value": 0.000398,
+      "pct_change": null,
+      "pretrend_wald_p": 0.0,
+      "treated_pre_mean": 24.793448
+    },
+    "log_trips": {
+      "ci_high": -0.642277,
+      "ci_low": -0.785448,
+      "coef": -0.713863,
+      "n_obs": 148393,
+      "p_holm": 0.0,
+      "p_value": 0.0,
+      "pct_change": -51.025118,
+      "pretrend_wald_p": 0.0,
+      "treated_pre_mean": 6.943144
+    },
+    "median_fare": {
+      "ci_high": 3.756335,
+      "ci_low": 2.562597,
+      "coef": 3.159466,
+      "n_obs": 147813,
+      "p_holm": 0.0,
+      "p_value": 0.0,
+      "pct_change": null,
+      "pretrend_wald_p": 0.0,
+      "treated_pre_mean": 15.029995
+    }
+  },
+  "did_robustness": {
+    "drop_holiday_weeks": {
+      "avg_speed_mph": {
+        "coef": -0.43639,
+        "p_value": 0.0
+      },
+      "card_tip_pct": {
+        "coef": 1.952892,
+        "p_value": 0.003164
+      },
+      "log_trips": {
+        "coef": -0.714925,
+        "p_value": 0.0
+      },
+      "median_fare": {
+        "coef": 3.180295,
+        "p_value": 0.0
+      }
+    },
+    "exploratory_spillover_border_vs_control": {
+      "avg_speed_mph": {
+        "coef": -0.484118,
+        "p_value": 0.0
+      },
+      "card_tip_pct": {
+        "coef": 1.81632,
+        "p_value": 0.000379
+      },
+      "log_trips": {
+        "coef": -0.814582,
+        "p_value": 0.0
+      },
+      "median_fare": {
+        "coef": 3.200515,
+        "p_value": 0.0
+      }
+    },
+    "include_border_zones": {
+      "avg_speed_mph": {
+        "coef": -0.374613,
+        "p_value": 0.0
+      },
+      "card_tip_pct": {
+        "coef": 1.794668,
+        "p_value": 0.00042
+      },
+      "log_trips": {
+        "coef": -0.685281,
+        "p_value": 0.0
+      },
+      "median_fare": {
+        "coef": 3.046695,
+        "p_value": 0.0
+      }
+    },
+    "placebo_2024-07-01": {
+      "avg_speed_mph": {
+        "coef": -0.687235,
+        "p_value": 0.0
+      },
+      "card_tip_pct": {
+        "coef": -1.270495,
+        "p_value": 0.212833
+      },
+      "log_trips": {
+        "coef": -0.135857,
+        "p_value": 0.0
+      },
+      "median_fare": {
+        "coef": 0.240707,
+        "p_value": 0.090108
+      }
+    },
+    "yellow_only": {
+      "avg_speed_mph": {
+        "coef": -0.350227,
+        "p_value": 0.0
+      },
+      "card_tip_pct": {
+        "coef": 1.517173,
+        "p_value": 0.018349
+      },
+      "log_trips": {
+        "coef": -0.780826,
+        "p_value": 0.0
+      },
+      "median_fare": {
+        "coef": 3.749319,
+        "p_value": 0.0
+      }
+    }
+  },
+  "dq_cbd_fee_anomalies_post_policy": 4817,
   "dq_cbd_fee_nonzero_pre_policy": 386,
   "dq_flagged_by_rule": {
-    "flag_dropoff_before_pickup": 5156,
-    "flag_negative_fare": 3583524,
-    "flag_nonpositive_distance": 2238275,
-    "flag_outside_window": 83,
-    "flag_over_3_hours": 49436,
-    "flag_over_80_mph": 567317,
-    "flag_unknown_zone": 815137
+    "flag_dropoff_before_pickup": 5171,
+    "flag_negative_fare": 3741887,
+    "flag_nonpositive_distance": 3202718,
+    "flag_outside_window": 88,
+    "flag_over_3_hours": 60850,
+    "flag_over_80_mph": 937054,
+    "flag_unknown_zone": 1022509
   },
-  "dq_pct_retained": 92.49,
-  "dq_rows_excluded": 6843013,
-  "dq_rows_in": 91143915,
-  "dq_rows_retained": 84300902,
-  "dq_rows_retained_green": 1168856,
-  "dq_rows_retained_yellow": 83132046,
-  "fct_trips_rows": 84300902,
-  "raw_files_green": 24,
-  "raw_files_yellow": 24,
+  "dq_pct_retained": 92.97,
+  "dq_rows_excluded": 8514164,
+  "dq_rows_in": 121184384,
+  "dq_rows_retained": 112670220,
+  "dq_rows_retained_green": 1487306,
+  "dq_rows_retained_yellow": 111182914,
+  "fct_trips_rows": 112670220,
+  "raw_files_green": 32,
+  "raw_files_yellow": 32,
   "raw_rows_cbd_taxi_zones": 38,
-  "raw_rows_green": 1251593,
+  "raw_rows_green": 1588707,
   "raw_rows_taxi_zone_lookup": 265,
   "raw_rows_taxi_zone_shapes": 263,
-  "raw_rows_trips_total": 91143915,
-  "raw_rows_yellow": 89892322
+  "raw_rows_trips_total": 121184384,
+  "raw_rows_yellow": 119595677
 }

@@ -1,0 +1,36 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt -r requirements-dev.txt
+
+      # Small, real slice spanning the policy start: 3 months of yellow + green (~190 MB) + reference data
+      - name: Download data slice
+        run: python ingestion/download.py --start 2024-12 --end 2025-02 --types yellow,green
+
+      - name: Build DuckDB raw schema
+        run: python ingestion/load_duckdb.py
+
+      - name: dbt build (DuckDB)
+        working-directory: dbt/zoneshift
+        run: |
+          cp profiles.yml.example profiles.yml
+          dbt build --profiles-dir .
+
+      - name: Snowflake-dialect tests (fakesnow loader, key queries, dbt on fakesnow)
+        run: pytest -q

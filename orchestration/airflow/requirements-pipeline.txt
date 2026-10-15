@@ -1,0 +1,11 @@
+# Pipeline deps installed into an isolated venv inside the Airflow image (/opt/zoneshift-venv),
+# so they never conflict with Airflow's own packages. Matches the root requirements.txt except
+# dbt-core (host pins 1.12.5 for dbt-databricks; the image has no Databricks adapter).
+duckdb==1.5.6
+dbt-core==1.12.6
+dbt-duckdb==1.11.0
+pandas==3.0.6
+pyarrow==26.0.0
+requests==2.34.2
+pyyaml==6.0.3
+python-dotenv==1.2.4

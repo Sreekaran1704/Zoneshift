@@ -1,0 +1,6 @@
+# Test / CI dependencies (Snowflake emulator + dbt Snowflake adapter). Install with requirements.txt.
+fakesnow[server]==0.11.22
+dbt-snowflake==1.12.3
+snowflake-connector-python==4.8.0
+pytest==9.1.1
+dbt-databricks==1.12.7

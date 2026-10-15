@@ -10,10 +10,14 @@ cbd as (
     select location_id from {{ ref('stg_cbd_zones') }}
 ),
 
+data_window as (
+    select window_start, window_end from {{ source('raw', 'load_metadata') }}
+),
+
 derived as (
     select
         trips.*,
-        date_diff('second', pickup_at, dropoff_at) / 60.0 as trip_minutes,
+        {{ dbt.datediff('pickup_at', 'dropoff_at', 'second') }} / 60.0 as trip_minutes,
         pu_cbd.location_id is not null                    as pickup_in_cbd,
         do_cbd.location_id is not null                    as dropoff_in_cbd
     from trips
@@ -23,7 +27,7 @@ derived as (
 
 flagged as (
     select
-        *,
+        derived.*,
         case when trip_minutes > 0 then trip_distance_mi / (trip_minutes / 60.0) end as avg_mph,
         -- Tip as % of the metered fare; card only because cash tips are not recorded
         case when payment_type = 1 and fare_amount > 0
@@ -35,10 +39,10 @@ flagged as (
         coalesce(trip_minutes > 180, false)                                         as flag_over_3_hours,
         -- distance > 80 mph * hours; also catches zero-duration trips with positive distance
         coalesce(trip_distance_mi > 80 * trip_minutes / 60.0, false)                as flag_over_80_mph,
-        coalesce(pickup_at < timestamp '{{ var("analysis_start") }}'
-              or pickup_at >= timestamp '{{ var("analysis_end") }}', true)          as flag_outside_window,
+        coalesce(pickup_at < window_start or pickup_at >= window_end, true)        as flag_outside_window,
         coalesce(pu_location_id in (264, 265) or do_location_id in (264, 265), true) as flag_unknown_zone
     from derived
+    cross join data_window
 )
 
 select

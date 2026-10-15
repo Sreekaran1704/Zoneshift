@@ -13,7 +13,7 @@ select
     cast(passenger_count as integer)                 as passenger_count,
     cast(trip_distance as double)                    as trip_distance_mi,
     cast(ratecodeid as integer)                      as ratecode_id,
-    cast(store_and_fwd_flag as varchar)              as store_and_fwd_flag,
+    cast(store_and_fwd_flag as {{ dbt.type_string() }})              as store_and_fwd_flag,
     cast(payment_type as integer)                    as payment_type,
     cast(fare_amount as double)                      as fare_amount,
     cast(extra as double)                            as extra,
@@ -27,6 +27,6 @@ select
     cast(null as double)                             as ehail_fee,
     cast(total_amount as double)                     as total_amount,
     cast(null as integer)                            as trip_type,
-    regexp_extract(filename, '[^/]+$')               as source_file,
+    {{ source_file('filename') }}                    as source_file,
     {{ source_month('filename') }}                   as source_month
 from source

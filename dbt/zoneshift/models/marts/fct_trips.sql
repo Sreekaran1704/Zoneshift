@@ -1,6 +1,7 @@
 {#
-  Clean trips only (is_excluded = false). Incremental by source file: each run appends trips from
-  monthly files not yet loaded. Use --full-refresh if TLC republishes an existing month.
+  Clean trips only (is_excluded = false). Incremental: each run appends clean trips whose trip_id
+  is not yet in the table (new monthly files, and older rows that enter a widened data window).
+  Use --full-refresh if TLC republishes an existing month.
 #}
 {{
     config(
@@ -46,5 +47,5 @@ select
 from {{ ref('int_trips_cleaned') }}
 where not is_excluded
 {% if is_incremental() %}
-  and source_file not in (select distinct source_file from {{ this }})
+  and trip_id not in (select trip_id from {{ this }})
 {% endif %}
