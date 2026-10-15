@@ -24,3 +24,6 @@ logs/
 .DS_Store
 .vscode/
 .idea/
+
+# Tableau CSV exports (regenerate with dashboard/export.py --csv)
+dashboard/data/*.csv

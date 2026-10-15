@@ -7,9 +7,13 @@ TYPES ?= yellow,green
 
 .PHONY: setup ingest dbt dq analysis dashboard app test warehouse-files databricks ask agent-eval airflow-build airflow-up airflow-down all
 
+# Python 3.12 venv (uv if installed, else python3.12) + pinned deps
 setup:
-	python3 -m venv .venv || true
-	$(PY) -m pip install -r requirements.txt -r requirements-dev.txt
+	@if command -v uv >/dev/null 2>&1; then \
+		uv venv --python 3.12 .venv && uv pip install --python $(PY) -r requirements.txt -r requirements-dev.txt; \
+	else \
+		python3.12 -m venv .venv && $(PY) -m pip install -r requirements.txt -r requirements-dev.txt; \
+	fi
 
 ingest:
 	$(PY) ingestion/download.py --start $(START) --end $(END) --types $(TYPES)
