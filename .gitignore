@@ -30,3 +30,4 @@ dashboard/data/*.csv
 
 # Local Claude Code tool config (not part of the project)
 .claude/
+CLAUDE.md
