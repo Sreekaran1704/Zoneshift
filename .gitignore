@@ -27,3 +27,6 @@ logs/
 
 # Tableau CSV exports (regenerate with dashboard/export.py --csv)
 dashboard/data/*.csv
+
+# Local Claude Code tool config (not part of the project)
+.claude/

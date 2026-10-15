@@ -11,12 +11,14 @@ Params (trigger with config to backfill):
 """
 import csv
 import os
+import re
+import shlex
 import urllib.error
 import urllib.request
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from airflow.exceptions import AirflowSkipException
+from airflow.exceptions import AirflowFailException, AirflowSkipException
 from airflow.sdk import Param, dag, task
 
 HOME = os.environ.get("ZONESHIFT_HOME", "/opt/zoneshift")
@@ -25,6 +27,14 @@ LOG = Path(HOME) / "results" / "ingestion_log.csv"
 TRIP_URL = "https://d37ci6vzurychx.cloudfront.net/trip-data/{type}_tripdata_{month}.parquet"
 OK_STATUSES = {"downloaded", "skipped_existing"}
 MONTH_PATTERN = r"^\d{4}-(0[1-9]|1[0-2])$"
+VALID_TYPES = {"yellow", "green", "fhvhv"}
+
+
+def checked_month(value: str, name: str) -> str:
+    """Params reach a shell command, so validate them here (Param schemas can be bypassed)."""
+    if not isinstance(value, str) or not re.fullmatch(MONTH_PATTERN, value):
+        raise AirflowFailException(f"{name} must be YYYY-MM, got {value!r}")  # bad input: no retries
+    return value
 
 
 def next_month(month: str) -> str:
@@ -78,12 +88,14 @@ def zoneshift_monthly():
 
     @task
     def detect_months(params: dict) -> dict:
-        types = [t.strip() for t in params["types"].split(",")]
+        types = [t.strip() for t in str(params["types"]).split(",")]
+        if not types or set(types) - VALID_TYPES:
+            raise AirflowFailException(f"types must be a comma-separated subset of {sorted(VALID_TYPES)}")
         if params["backfill_start"]:
-            start = params["backfill_start"]
-            end = params["backfill_end"] or start
+            start = checked_month(params["backfill_start"], "backfill_start")
+            end = checked_month(params["backfill_end"] or start, "backfill_end")
             if end < start:
-                raise ValueError(f"backfill_end {end} is before backfill_start {start}")
+                raise AirflowFailException(f"backfill_end {end} is before backfill_start {start}")
             print(f"Backfill requested: {start}..{end}")
             return {"start": start, "end": end, "types": ",".join(types)}
 
@@ -109,8 +121,8 @@ def zoneshift_monthly():
 
     @task.bash(cwd=HOME)
     def download(months: dict) -> str:
-        return (f"{VENV}/python ingestion/download.py --start {months['start']} "
-                f"--end {months['end']} --types {months['types']}")
+        q = {k: shlex.quote(str(v)) for k, v in months.items()}  # defence in depth after validation
+        return f"{VENV}/python ingestion/download.py --start {q['start']} --end {q['end']} --types {q['types']}"
 
     @task
     def validate(months: dict) -> int:

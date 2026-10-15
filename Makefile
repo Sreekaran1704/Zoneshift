@@ -5,7 +5,7 @@ START ?= 2024-01
 END ?= 2025-12
 TYPES ?= yellow,green
 
-.PHONY: setup ingest dbt dq analysis dashboard app test warehouse-files databricks ask agent-eval airflow-build airflow-up airflow-down all
+.PHONY: setup ingest dbt dq analysis dashboard app test warehouse-files databricks ask agent-eval airflow-env airflow-build airflow-up airflow-down all
 
 # Python 3.12 venv (uv if installed, else python3.12) + pinned deps
 setup:
@@ -65,15 +65,20 @@ agent-eval:
 AIRFLOW_DIR := orchestration/airflow
 
 # Airflow (Docker): image with the pipeline in an isolated venv; repo mounted at the same path
+# Random Fernet key, JWT secret and admin password, written once to a gitignored, owner-only file
 $(AIRFLOW_DIR)/.env:
-	printf "AIRFLOW_UID=%s\nZONESHIFT_HOME=%s\n" "$$(id -u)" "$(CURDIR)" > $@
+	$(PY) -c "import base64, os, secrets; print(f'AIRFLOW_UID={os.getuid()}\nZONESHIFT_HOME=$(CURDIR)\nFERNET_KEY={base64.urlsafe_b64encode(os.urandom(32)).decode()}\nAIRFLOW__API_AUTH__JWT_SECRET={secrets.token_urlsafe(48)}\n_AIRFLOW_WWW_USER_PASSWORD={secrets.token_urlsafe(18)}')" > $@
+	chmod 600 $@
+	@echo "Wrote $@ (Airflow admin password is in this file)"
+
+airflow-env: $(AIRFLOW_DIR)/.env
 
 airflow-build:
 	docker build -t zoneshift-airflow:3.3.2 $(AIRFLOW_DIR)
 
 airflow-up: $(AIRFLOW_DIR)/.env
 	cd $(AIRFLOW_DIR) && docker compose up airflow-init && docker compose up -d
-	@echo "Airflow UI: http://localhost:8080 (airflow / airflow)"
+	@echo "Airflow UI: http://localhost:8080 (user airflow; password in $(AIRFLOW_DIR)/.env)"
 
 airflow-down:
 	cd $(AIRFLOW_DIR) && docker compose down

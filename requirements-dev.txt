@@ -4,3 +4,5 @@ dbt-snowflake==1.12.3
 snowflake-connector-python==4.8.0
 pytest==9.1.1
 dbt-databricks==1.12.7
+# oauthlib stays 3.3.1: databricks-sql-connector requires <4.0.0. PYSEC-2026-4114 (timing leak in
+# oauthlib's server-side PKCE check) does not apply: this project only uses it as a client with a token.

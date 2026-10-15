@@ -15,7 +15,8 @@ TABLE_ORDER = ["fct_trips", "agg_zone_day", "agg_zone_hour", "dim_zone", "dim_da
 
 def connect() -> duckdb.DuckDBPyConnection:
     """Read-only connection with file/network access disabled (second guard layer)."""
-    return duckdb.connect(str(DB_PATH), read_only=True, config={"enable_external_access": False})
+    return duckdb.connect(str(DB_PATH), read_only=True,
+                          config={"enable_external_access": False, "lock_configuration": True})
 
 
 @lru_cache(maxsize=1)

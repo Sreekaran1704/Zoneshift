@@ -11,7 +11,7 @@ make airflow-build   # image: apache/airflow:3.3.2-python3.12 + pipeline venv (/
 make airflow-up      # writes orchestration/airflow/.env, migrates the DB, starts the services
 ```
 
-UI at http://localhost:8080 (local-only default login `airflow` / `airflow`). Stop with
+UI at http://localhost:8080, bound to 127.0.0.1 only (user `airflow`; the random password is in `orchestration/airflow/.env`, created by `make airflow-env`). Stop with
 `make airflow-down`.
 
 ## Design

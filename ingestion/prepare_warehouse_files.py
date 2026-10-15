@@ -11,6 +11,7 @@ Usage:
 """
 import argparse
 import json
+import re
 import shutil
 from pathlib import Path
 
@@ -35,6 +36,12 @@ def main() -> None:
                    help="also export zone_spatial_fallback.csv from marts.dim_zone (fakesnow tests only)")
     args = p.parse_args()
 
+    types = args.types.split(",")
+    if set(types) - {"yellow", "green", "fhvhv"}:
+        p.error(f"unknown types: {set(types) - {'yellow', 'green', 'fhvhv'}}")
+    if args.months and not all(re.fullmatch(r"\d{4}-(0[1-9]|1[0-2])", m) for m in args.months.split(",")):
+        p.error("--months must be comma-separated YYYY-MM values")
+
     con = duckdb.connect(str(args.db), read_only=True)
     con.execute("load spatial")
     if args.out.exists():
@@ -43,7 +50,7 @@ def main() -> None:
                 "sample_mod": args.sample_mod}
     months = set(args.months.split(",")) if args.months else None
 
-    for t in args.types.split(","):
+    for t in types:
         files = sorted((RAW_DIR / t).glob(f"{t}_tripdata_*.parquet"))
         if months:
             files = [f for f in files if f.stem.rsplit("_", 1)[1] in months]
