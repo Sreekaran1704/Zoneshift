@@ -169,7 +169,11 @@ make databricks                         # Databricks Free Edition deployment (DA
 make airflow-build && make airflow-up   # Airflow in Docker; UI at http://localhost:8080
 ```
 
-Copy `.env.example` to `.env` for the optional cloud and agent steps; `.env` is gitignored.
+The optional cloud and agent steps read credentials from a `.env` file in the repo root (gitignored;
+create it yourself, `chmod 600`): `GROQ_API_KEY` for the agent; `DATABRICKS_HOST`,
+`DATABRICKS_HTTP_PATH`, `DATABRICKS_TOKEN` for Databricks; `SNOWFLAKE_ACCOUNT`, `SNOWFLAKE_USER`,
+`SNOWFLAKE_PASSWORD`, `SNOWFLAKE_ROLE`, `SNOWFLAKE_WAREHOUSE`, `SNOWFLAKE_DATABASE`,
+`SNOWFLAKE_SCHEMA` for the optional Snowflake run.
 `make all` builds the core 2024-2025 window; the Airflow DAG extends the warehouse as TLC
 publishes new months (the analysis stays pinned to its pre-registered window).
 
